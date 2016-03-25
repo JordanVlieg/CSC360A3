@@ -1,11 +1,9 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "Constants.h"
 #include "disk.h"
-
-FILE *diskFile;
-char *filename = NULL;
 
 int charArrayToInt(unsigned char theBuffer[])
 {
@@ -115,77 +113,117 @@ void findFATBlocks(FILE *diskFile, int fatStart, int numFATBlocks, int blockSize
 	return;
 }
 
+char getStatusChar(char statusByte)
+{
+	char dataType = 0;
+	if((statusByte & 1) == 0)
+	{
+		// Directory entry is free
+		dataType = 0;
+	}
+	else
+	{
+		if((statusByte & 2) == 2)
+		{
+			dataType = 'F';
+		}
+		else if((statusByte & 4) == 4)
+		{
+			dataType = 'D';
+		}
+	}
+	return dataType;
+}
+
 void getFileInfo(FILE *diskFile, int rootDirStart, int numRootDirBlocks, int blockSize)
 {
 	unsigned char buffer[DIRECTORY_ENTRY_SIZE + 1];
+
+	//unsigned char* startingBlockPtr = &buffer[1];
+	//unsigned char* numBlocksPtr = &buffer[5];
+	unsigned char* fileSizePtr = &buffer[9];
+	//unsigned char* createTimePtr = &buffer[13];
+	//unsigned char* modifyTimePtr = &buffer[20];
+	unsigned char* fileNamePtr = &buffer[27];
+	//unsigned char* unusedPtr = &buffer[58];
+
+
 	fseek ( diskFile , (rootDirStart * blockSize) , SEEK_SET );
 	int dirPos;
 	for(dirPos = 0; dirPos < numRootDirBlocks * blockSize; dirPos += DIRECTORY_ENTRY_SIZE)
 	{
 		//fgets(buffer, DIRECTORY_ENTRY_SIZE + 1, diskFile);
 		fread(buffer, sizeof(unsigned char), DIRECTORY_ENTRY_SIZE, diskFile);
-		char status = buffer[0]; // Declaring variable for code readablilty
-		char dataType = 0;
-		if((status & 1) == 0)
-		{
-			// Directory entry is free
-			dataType = 0;
-		}
-		else
-		{
-			if((status & 2) == 2)
-			{
-				dataType = 'F';
-			}
-			else if((status & 4) == 4)
-			{
-				dataType = 'D';
-			}
-		}
 
-		if(dataType != 0)
+		char status = getStatusChar(buffer[0]);
+		
+
+		if(status != 0)
 		{
-			int fileSize = charArrayToInt(&buffer[9]); // Passes in a address that points to the fileSize portion of the directory entry
-			char* fileSizeBuffer = calloc(11, sizeof(char));
-			char* arrFileSize = calloc(11, sizeof(char));
-			snprintf(fileSizeBuffer, 11, "%u", fileSize);
-			int bufferTracker = 10;
-			int arrayTracker = 9;
-
-			for(; bufferTracker >= 0; bufferTracker--)
-			{
-				arrFileSize[bufferTracker] = ' ';
-				if(fileSizeBuffer[bufferTracker] != 0)
-				{
-					arrFileSize[arrayTracker] = fileSizeBuffer[bufferTracker];
-					arrayTracker--;
-				}
-			}
-
-			char* fileNameBuffer = calloc(31, sizeof(char));
-			int fileNameTracker = 30;
-			for(bufferTracker = 30; bufferTracker >= 0; bufferTracker--)
-			{
-				fileNameBuffer[bufferTracker] = ' ';
-				if(buffer[bufferTracker + 27] != 0)
-				{
-					fileNameBuffer[fileNameTracker] = buffer[bufferTracker + 27];
-					fileNameTracker--;
-				}
-			}
+			int fileSize = charArrayToInt(fileSizePtr); // Passes in a address that points to the fileSize portion of the directory entry
 
 			int modifedYear = (buffer[20] << 8) + buffer[21];
-			//printf("%x, %x, %x\n", buffer[24], buffer[25], buffer[26]);
 			
-			printf("%c ", dataType);
-			printf(arrFileSize);
-			printf(" ");
-			printf(fileNameBuffer);
-			printf(" ");
+			printf("%c ", status);
+			printf("%10u ", fileSize);
+			printf("%30s ", fileNamePtr);
 			printf("%04d/%02d/%02d %02d:%02d:%02d", modifedYear, buffer[22], buffer[23], buffer[24], buffer[25], buffer[26]);
 			printf("\n");
 		}
 	}
-	printf("reached fileinfo\n");
 	return;
+}
+
+void getFileFromClient(FILE *diskFile, FILE *hostFile, char hostFileName[], int rootDirStart, int numRootDirBlocks, int blockSize)
+{
+	unsigned char directoryBuffer[DIRECTORY_ENTRY_SIZE + 1];
+
+	unsigned char* startingBlockPtr = &directoryBuffer[1];
+	//unsigned char* numBlocksPtr = &directoryBuffer[5];
+	unsigned char* fileSizePtr = &directoryBuffer[9];
+	//unsigned char* createTimePtr = &directoryBuffer[13];
+	//unsigned char* modifyTimePtr = &directoryBuffer[20];
+	char* fileNamePtr = &directoryBuffer[27];
+	//unsigned char* unusedPtr = &directoryBuffer[58];
+
+	int fileSize = -1;
+	int startingFileBlock = -1;
+	//int numFileBlocks = charArrayToInt(numBlocksPtr);
+
+	//fseek ( diskFile , (startingFileBlock * blockSize) , SEEK_SET );
+
+	fseek(diskFile, (rootDirStart * blockSize), SEEK_SET);
+
+	fread(directoryBuffer, sizeof(unsigned char), DIRECTORY_ENTRY_SIZE, diskFile);
+	
+	int fileFound = 0;
+	int dirPos;
+	for(dirPos = 0; dirPos < numRootDirBlocks * blockSize; dirPos += DIRECTORY_ENTRY_SIZE)
+	{
+		char status = getStatusChar(directoryBuffer[0]);
+
+		if(status != 0)
+		{
+			//printf("File name: %s", fileNamePtr);
+			if(strcmp(hostFileName, fileNamePtr) == 0)
+			{
+				fileSize = charArrayToInt(fileSizePtr);
+				//printf("File size: %u", fileSize);
+				startingFileBlock = charArrayToInt(startingBlockPtr);
+				fseek(diskFile, (startingFileBlock * blockSize), SEEK_SET);
+				unsigned char fileBuffer[fileSize + 1];
+				fread(fileBuffer, sizeof(unsigned char), fileSize, diskFile);
+				fileBuffer[fileSize] = '\0';
+				//printf("%s", fileBuffer);
+				fwrite(fileBuffer, sizeof(unsigned char), fileSize, hostFile);
+				fileFound = 1;
+				break;
+			}
+		}
+		fread(directoryBuffer, sizeof(unsigned char), DIRECTORY_ENTRY_SIZE, diskFile);
+	}
+	if(!fileFound)
+	{
+		printf("File not found.\n");
+	}
 }

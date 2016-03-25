@@ -9,8 +9,12 @@ int main ( int argc, char *argv[] )
 {
 
 	FILE *diskFile;
-	char *filename = argv[1];
-	diskFile = fopen(filename,"r");
+	FILE *hostFile;
+	char *diskFileName = argv[1];
+	char *hostFileName = argv[2];
+
+	diskFile = fopen(diskFileName,"r");
+	hostFile = fopen(hostFileName, "w");
 
 	int blockSize = readBlockSize(diskFile);
 	int blockCount = readBlockCount(diskFile);
@@ -19,7 +23,8 @@ int main ( int argc, char *argv[] )
 	int rootDirStart = readDirStart(diskFile);
 	int numRootDirBlocks = readDirBlocks(diskFile);
 
-	getFileInfo(diskFile, rootDirStart, numRootDirBlocks, blockSize);
+	getFileFromClient(diskFile, hostFile, hostFileName, rootDirStart, numRootDirBlocks, blockSize);
 	fclose(diskFile);
+	fclose(hostFile);
 	return 0;
 }

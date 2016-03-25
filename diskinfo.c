@@ -30,6 +30,6 @@ int main ( int argc, char *argv[] )
 	fflush(stdout);
 
 	findFATBlocks(diskFile, fatStart, numFatBlocks, blockSize);
-	//getFileInfo(diskFile, rootDirStart, numRootDirBlocks, blockSize);
+	fclose(diskFile);
 	return 0;
 }
