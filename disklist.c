@@ -5,7 +5,7 @@
 #include "disk.h"
 
 
-void main ( int argc, char *argv[] )
+int main ( int argc, char *argv[] )
 {
 
 	FILE *diskFile;
@@ -20,6 +20,6 @@ void main ( int argc, char *argv[] )
 	int numRootDirBlocks = readDirBlocks(diskFile);
 
 	getFileInfo(diskFile, rootDirStart, numRootDirBlocks, blockSize);
-	
+
 	return 0;
 }
