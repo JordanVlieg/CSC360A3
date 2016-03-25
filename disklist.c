@@ -20,5 +20,5 @@ void main ( int argc, char *argv[] )
 	int numRootDirBlocks = readDirBlocks(diskFile);
 
 	getFileInfo(diskFile, rootDirStart, numRootDirBlocks, blockSize);
-	return;
+	return 0;
 }

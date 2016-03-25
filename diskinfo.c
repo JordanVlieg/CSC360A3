@@ -31,5 +31,5 @@ int main ( int argc, char *argv[] )
 
 	findFATBlocks(diskFile, fatStart, numFatBlocks, blockSize);
 	//getFileInfo(diskFile, rootDirStart, numRootDirBlocks, blockSize);
-
+	return 0;
 }
