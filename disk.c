@@ -207,6 +207,7 @@ void getFileFromClient(FILE *diskFile, FILE *hostFile, char hostFileName[], int 
 			//printf("File name: %s", fileNamePtr);
 			if(strcmp(hostFileName, fileNamePtr) == 0)
 			{
+				hostFile = fopen(hostFileName, "w");
 				fileSize = charArrayToInt(fileSizePtr);
 				//printf("File size: %u", fileSize);
 				startingFileBlock = charArrayToInt(startingBlockPtr);
@@ -217,6 +218,7 @@ void getFileFromClient(FILE *diskFile, FILE *hostFile, char hostFileName[], int 
 				//printf("%s", fileBuffer);
 				fwrite(fileBuffer, sizeof(unsigned char), fileSize, hostFile);
 				fileFound = 1;
+				fclose(hostFile);
 				break;
 			}
 		}
