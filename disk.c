@@ -12,6 +12,7 @@ int charArrayToInt(unsigned char* theBuffer)
 	return (theBuffer[0] << 24) + (theBuffer[1] << 16) + (theBuffer[2] << 8) + theBuffer[3];
 }
 
+/*
 char* readFSID(FILE *diskFile)
 {
 	char* buffer = malloc(BLOCKSIZE_OFFSET - IDENT_OFFSET + 1);
@@ -21,6 +22,7 @@ char* readFSID(FILE *diskFile)
 	fread(buffer, sizeof(char), BLOCKSIZE_OFFSET - IDENT_OFFSET, diskFile);
 	return buffer;
 }
+*/
 
 int readBlockSize(FILE *diskFile)
 {
@@ -29,6 +31,7 @@ int readBlockSize(FILE *diskFile)
 	//fgets(buffer, BLOCKCOUNT_OFFSET - BLOCKSIZE_OFFSET + 1, diskFile);
 	fread(buffer, sizeof(unsigned char), BLOCKCOUNT_OFFSET - BLOCKSIZE_OFFSET, diskFile);
 	int blockSize = (buffer[0] << 8) + buffer[1];
+	free(buffer);
 	return blockSize;
 }
 
@@ -39,6 +42,7 @@ int readBlockCount(FILE *diskFile)
 	//fgets(buffer, FATSTART_OFFSET - BLOCKCOUNT_OFFSET + 1, diskFile);
 	fread(buffer, sizeof(unsigned char), FATSTART_OFFSET - BLOCKCOUNT_OFFSET, diskFile);
 	int blockCount = charArrayToInt(buffer);
+	free(buffer);
 	return blockCount;
 }
 
@@ -49,7 +53,7 @@ int readFATStart(FILE *diskFile)
 	//fgets(buffer, FATBLOCKS_OFFSET - FATSTART_OFFSET + 1, diskFile);
 	fread(buffer, sizeof(unsigned char), FATBLOCKS_OFFSET - FATSTART_OFFSET, diskFile);
 	int fatStart = charArrayToInt(buffer);
-	
+	free(buffer);
 	return fatStart;
 }
 
@@ -60,6 +64,7 @@ int readFATBlocks(FILE *diskFile)
 	//fgets(buffer, ROOTDIRSTART_OFFSET - FATBLOCKS_OFFSET + 1, diskFile);
 	fread(buffer, sizeof(unsigned char), ROOTDIRSTART_OFFSET - FATBLOCKS_OFFSET, diskFile);
 	int fatBlocks = charArrayToInt(buffer);
+	free(buffer);
 	return fatBlocks;
 }
 
@@ -70,6 +75,7 @@ int readDirStart(FILE *diskFile)
 	//fgets(buffer, ROOTDIRBLOCKS_OFFSET - ROOTDIRSTART_OFFSET + 1, diskFile);
 	fread(buffer, sizeof(unsigned char), ROOTDIRBLOCKS_OFFSET - ROOTDIRSTART_OFFSET, diskFile);
 	int dirStart = charArrayToInt(buffer);
+	free(buffer);
 	return dirStart;
 }
 
@@ -80,6 +86,7 @@ int readDirBlocks(FILE *diskFile)
 	//fgets(buffer, ROOTDIRBLOCKS_OFFSET + 4 + 1, diskFile);
 	fread(buffer, sizeof(unsigned char), ROOTDIRBLOCKS_OFFSET + 4, diskFile);
 	int dirBlocks = charArrayToInt(buffer);
+	free(buffer);
 	return dirBlocks;
 }
 
@@ -111,7 +118,7 @@ void findFATBlocks(FILE *diskFile, int fatStart, int numFATBlocks, int blockSize
 		}
 	}
 	printf("\nFAT Information: \nFree Blocks: %d\nReserved Blocks: %d\nAllocated Blocks: %d\n", available, reserved, allocated);
-
+	free(buffer);
 	return;
 }
 
@@ -186,4 +193,6 @@ void getFileInfo(FILE *diskFile, int rootDirStart, int numRootDirBlocks, int blo
 			printf("\n");
 		}
 	}
+	free(buffer);
+	return;
 }
