@@ -1,18 +1,3 @@
-#A3OBJS = diskinfo.o disklist.o
-
-#all: diskinfo disklist
-
-#diskinfo: diskinfo.c
-#	gcc -o diskinfo diskinfo.c
-
-#disklist: disklist.c
-#	gcc -o disklist disklist.c
-
-#clean: 
-#	rm -rf $(A3OBJS) diskinfo disklist
-
-
-
 # CC = gcc
 CFLAGS = -Wall -g
 

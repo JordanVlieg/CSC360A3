@@ -35,7 +35,6 @@ char* readFSID(FILE *diskFile)
 	static char buffer[BLOCKSIZE_OFFSET - IDENT_OFFSET + 1];
 	buffer[BLOCKSIZE_OFFSET - IDENT_OFFSET] = '\0';
 	fseek ( diskFile , IDENT_OFFSET , SEEK_SET );
-	//fgets(buffer, BLOCKSIZE_OFFSET - IDENT_OFFSET + 1, diskFile);
 	fread(buffer, sizeof(char), BLOCKSIZE_OFFSET - IDENT_OFFSET, diskFile);
 	return buffer;
 }
@@ -44,7 +43,6 @@ int readBlockSize(FILE *diskFile)
 {
 	unsigned char buffer[BLOCKCOUNT_OFFSET - BLOCKSIZE_OFFSET + 1];
 	fseek ( diskFile , BLOCKSIZE_OFFSET , SEEK_SET );
-	//fgets(buffer, BLOCKCOUNT_OFFSET - BLOCKSIZE_OFFSET + 1, diskFile);
 	fread(buffer, sizeof(unsigned char), BLOCKCOUNT_OFFSET - BLOCKSIZE_OFFSET, diskFile);
 	int blockSize = (buffer[0] << 8) + buffer[1];
 	return blockSize;
@@ -54,7 +52,6 @@ int readBlockCount(FILE *diskFile)
 {
 	unsigned char buffer[FATSTART_OFFSET - BLOCKCOUNT_OFFSET + 1];
 	fseek ( diskFile , BLOCKCOUNT_OFFSET , SEEK_SET );
-	//fgets(buffer, FATSTART_OFFSET - BLOCKCOUNT_OFFSET + 1, diskFile);
 	fread(&buffer, sizeof(unsigned char), FATSTART_OFFSET - BLOCKCOUNT_OFFSET, diskFile);
 	int blockCount = charArrayToInt(buffer);
 	return blockCount;
@@ -64,7 +61,6 @@ int readFATStart(FILE *diskFile)
 {
 	unsigned char buffer[FATBLOCKS_OFFSET - FATSTART_OFFSET + 1];
 	fseek ( diskFile , FATSTART_OFFSET , SEEK_SET );
-	//fgets(buffer, FATBLOCKS_OFFSET - FATSTART_OFFSET + 1, diskFile);
 	fread(&buffer, sizeof(unsigned char), FATBLOCKS_OFFSET - FATSTART_OFFSET, diskFile);
 	int fatStart = charArrayToInt(buffer);
 	return fatStart;
@@ -74,7 +70,6 @@ int readFATBlocks(FILE *diskFile)
 {
 	unsigned char buffer[ROOTDIRSTART_OFFSET - FATBLOCKS_OFFSET + 1];
 	fseek ( diskFile , FATBLOCKS_OFFSET , SEEK_SET );
-	//fgets(buffer, ROOTDIRSTART_OFFSET - FATBLOCKS_OFFSET + 1, diskFile);
 	fread(buffer, sizeof(unsigned char), ROOTDIRSTART_OFFSET - FATBLOCKS_OFFSET, diskFile);
 	int fatBlocks = charArrayToInt(buffer);
 	return fatBlocks;
@@ -84,7 +79,6 @@ int readDirStart(FILE *diskFile)
 {
 	unsigned char buffer[ROOTDIRBLOCKS_OFFSET - ROOTDIRSTART_OFFSET + 1];
 	fseek ( diskFile , ROOTDIRSTART_OFFSET , SEEK_SET );
-	//fgets(buffer, ROOTDIRBLOCKS_OFFSET - ROOTDIRSTART_OFFSET + 1, diskFile);
 	fread(buffer, sizeof(unsigned char), ROOTDIRBLOCKS_OFFSET - ROOTDIRSTART_OFFSET, diskFile);
 	int dirStart = charArrayToInt(buffer);
 	return dirStart;
@@ -94,7 +88,6 @@ int readDirBlocks(FILE *diskFile)
 {
 	unsigned char buffer[4 + 1];
 	fseek ( diskFile , ROOTDIRBLOCKS_OFFSET , SEEK_SET );
-	//fgets(buffer, ROOTDIRBLOCKS_OFFSET + 4 + 1, diskFile);
 	fread(buffer, sizeof(unsigned char), 4, diskFile);
 	int dirBlocks = charArrayToInt(buffer);
 	return dirBlocks;
@@ -111,7 +104,6 @@ int* findFATBlocks(FILE *diskFile, int fatStart, int numFATBlocks, int blockSize
 	int fatPos;
 	for(fatPos = 0; fatPos < numFATBlocks * blockSize; fatPos += FAT_ENTRY_SIZE)
 	{
-		//fgets(buffer, FAT_ENTRY_SIZE + 1, diskFile);
 		fread(buffer, sizeof(unsigned char), FAT_ENTRY_SIZE, diskFile);
 		int fatEntry = charArrayToInt(buffer);
 		if(fatEntry == 0)
@@ -160,34 +152,19 @@ char getStatusChar(char statusByte)
 void getFileInfo(FILE *diskFile, int rootDirStart, int numRootDirBlocks, int blockSize)
 {
 	unsigned char buffer[DIRECTORY_ENTRY_SIZE + 1];
-
-	//unsigned char* startingBlockPtr = &buffer[1];
-	//unsigned char* numBlocksPtr = &buffer[5];
 	unsigned char* fileSizePtr = &buffer[9];
-	//unsigned char* createTimePtr = &buffer[13];
-	//unsigned char* modifyTimePtr = &buffer[20];
 	unsigned char* fileNamePtr = &buffer[27];
-	//unsigned char* unusedPtr = &buffer[58];
-
 
 	fseek ( diskFile , (rootDirStart * blockSize) , SEEK_SET );
 	int dirPos;
 	for(dirPos = 0; dirPos < numRootDirBlocks * blockSize; dirPos += DIRECTORY_ENTRY_SIZE)
 	{
-		//fgets(buffer, DIRECTORY_ENTRY_SIZE + 1, diskFile);
 		fread(buffer, sizeof(unsigned char), DIRECTORY_ENTRY_SIZE, diskFile);
-
 		char status = getStatusChar(buffer[0]);
-		
-
 		if(status != 0)
 		{
 			int fileSize = charArrayToInt(fileSizePtr); // Passes in a address that points to the fileSize portion of the directory entry
-
 			int modifedYear = (buffer[20] << 8) + buffer[21];
-
-			//int startBlock = charArrayToInt(startingBlockPtr);
-			
 			printf("%c ", status);
 			printf("%10u ", fileSize);
 			printf("%30s ", fileNamePtr);
@@ -205,23 +182,12 @@ void getFileFromClient(char diskFileName[], char hostFileName[], int rootDirStar
 	diskFile = fopen(diskFileName,"r");
 
 	unsigned char directoryBuffer[DIRECTORY_ENTRY_SIZE + 1];
-
 	unsigned char* startingBlockPtr = &directoryBuffer[1];
-	//unsigned char* numBlocksPtr = &directoryBuffer[5];
 	unsigned char* fileSizePtr = &directoryBuffer[9];
-	//unsigned char* createTimePtr = &directoryBuffer[13];
-	//unsigned char* modifyTimePtr = &directoryBuffer[20];
 	char* fileNamePtr = &directoryBuffer[27];
-	//unsigned char* unusedPtr = &directoryBuffer[58];
-
-	//int fileSize = -1;
 	int startingFileBlock = -1;
-	//int numFileBlocks = charArrayToInt(numBlocksPtr);
-
-	//fseek ( diskFile , (startingFileBlock * blockSize) , SEEK_SET );
 
 	fseek(diskFile, (rootDirStart * blockSize), SEEK_SET);
-
 	fread(directoryBuffer, sizeof(unsigned char), DIRECTORY_ENTRY_SIZE, diskFile);
 	
 	int fatEntry = 0;
@@ -233,7 +199,6 @@ void getFileFromClient(char diskFileName[], char hostFileName[], int rootDirStar
 
 		if(status != 0)
 		{
-			//printf("File name: %s", fileNamePtr);
 			if(strcmp(hostFileName, fileNamePtr) == 0)
 			{
 				startingFileBlock = charArrayToInt(startingBlockPtr);
@@ -251,7 +216,6 @@ void getFileFromClient(char diskFileName[], char hostFileName[], int rootDirStar
 		fclose(hostFile);
 		hostFile = fopen(hostFileName, "a");
 		fatEntry = startingFileBlock;
-		//printf("FAT ENTRY: %x\n", fatEntry);
 		int remainingBytes = theFileSize;
 		while(fatEntry != FAT_EOF)
 		{
@@ -271,9 +235,6 @@ void getFileFromClient(char diskFileName[], char hostFileName[], int rootDirStar
 			fread(fatEntryBuff, sizeof(unsigned char), 4, diskFile);
 
 			fatEntry = charArrayToInt(fatEntryBuff);
-			//printf("FAT ENTRY: %x\n", fatEntry);
-			//char* garbage = NULL;
-			//scanf("%c", garbage);
 			remainingBytes -= DEFAULT_BLOCK_SIZE;
 		}
 		fclose(hostFile);
@@ -296,9 +257,6 @@ void putFileOnClient(char diskFileName[], char hostFileName[], int availableBloc
 	unsigned int fatChain[numBlocksRequired + 1];
 	fatChain[numBlocksRequired] = FAT_EOF;
 
-	
-
-
 	if(availableBlocks < numBlocksRequired)
 	{
 		printf("Not enough free blocks on disk.\n");
@@ -317,12 +275,7 @@ void putFileOnClient(char diskFileName[], char hostFileName[], int availableBloc
 	unsigned char* createTimePtr = &directoryBuffer[13];
 	unsigned char* modifyTimePtr = &directoryBuffer[20];
 	char* fileNamePtr = &directoryBuffer[27];
-	//unsigned char* unusedPtr = &directoryBuffer[58];
 
-	//int startingFileBlock = 0;
-	//int numFileBlocks = charArrayToInt(numBlocksPtr);
-
-	//fseek ( diskFile , (startingFileBlock * blockSize) , SEEK_SET );
 	unsigned char fatEntryBuff[4];
 	int fatEntry = 0;
 
@@ -330,30 +283,34 @@ void putFileOnClient(char diskFileName[], char hostFileName[], int availableBloc
 
 	int remainingBlocksRequired = numBlocksRequired;
 	int chainPos = 0;
-	//Change this to iterate over the FAT blocks instead
-	for(; remainingBlocksRequired > 0;)
+	int numFatEntries = numFatBlocks * (DEFAULT_BLOCK_SIZE / FAT_ENTRY_SIZE);
+
+	int fatEntryNum;
+	for(fatEntryNum = 0; fatEntryNum < numFatEntries; fatEntryNum++)
 	{
 		fread(fatEntryBuff, sizeof(unsigned char), FAT_ENTRY_SIZE, diskFile);
 		fatEntry = charArrayToInt(fatEntryBuff);
 		if(fatEntry == FAT_FREE)
 		{
-
-			/*block to fatEntry (NOT FAT ENTRY CONTENT)*/
-			//512 + fatEntry*4
-
-
 			fatChain[chainPos] = ((ftell(diskFile) - FAT_ENTRY_SIZE)) - (DEFAULT_BLOCK_SIZE * fatStart);
 			chainPos++;
 			remainingBlocksRequired--;
+			if(remainingBlocksRequired <= 0)
+			{
+				break;
+			}
 		}
 	}
+	if(remainingBlocksRequired > 0)
+	{
+		printf("Not enough space on disk.\n");
+		return;
+	}
 
-	
 	fseek ( diskFile , (rootDirStart * blockSize) , SEEK_SET );
 	int dirPos;
 	for(dirPos = 0; dirPos < numRootDirBlocks * blockSize; dirPos += DIRECTORY_ENTRY_SIZE)
 	{
-		//fgets(buffer, DIRECTORY_ENTRY_SIZE + 1, diskFile);
 		fread(directoryBuffer, sizeof(unsigned char), DIRECTORY_ENTRY_SIZE, diskFile);
 
 		char status = getStatusChar(directoryBuffer[0]);
@@ -385,10 +342,6 @@ void putFileOnClient(char diskFileName[], char hostFileName[], int availableBloc
 			modifyTimePtr[1] = ((theTime->tm_year + 1900) & 255);
 			modifyTimePtr[0] = (((theTime->tm_year + 1900) >> 8) & 255);
 
-			//printf("Current local time and date: %s", asctime(info));
-
-
-
 			directoryBuffer[0] = 3;
 			setIntToBuffer((fatChain[0] / 4), startingBlockPtr);
 			setIntToBuffer(numBlocksRequired, numBlocksPtr);
@@ -409,12 +362,10 @@ void putFileOnClient(char diskFileName[], char hostFileName[], int availableBloc
 		}
 	}
 
-	//printf("Blocks required: %d\n", numBlocksRequired);
 	unsigned char blockBuffer[DEFAULT_BLOCK_SIZE];
 	int block = 0;
 	for(; block < numBlocksRequired; block++)
 	{
-		//printf("Blocks written: %d\n", block+1);
 		fread(blockBuffer, sizeof(unsigned char), DEFAULT_BLOCK_SIZE, hostFile);
 		fseek(diskFile, ((DEFAULT_BLOCK_SIZE * (fatChain[block]/4))), SEEK_SET);
 		fwrite(blockBuffer, sizeof(unsigned char), DEFAULT_BLOCK_SIZE, diskFile);

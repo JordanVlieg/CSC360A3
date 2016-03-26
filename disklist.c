@@ -18,9 +18,6 @@ int main ( int argc, char *argv[] )
 	}
 
 	int blockSize = readBlockSize(diskFile);
-	//int blockCount = readBlockCount(diskFile);
-	//int fatStart = readFATStart(diskFile);
-	//int numFatBlocks = readFATBlocks(diskFile);
 	int rootDirStart = readDirStart(diskFile);
 	int numRootDirBlocks = readDirBlocks(diskFile);
 

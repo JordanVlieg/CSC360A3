@@ -14,9 +14,6 @@ int main ( int argc, char *argv[] )
 		printf("File not found error\n");
 		return 0;
 	}
-	//char theBuffer[10];4294952960
-	//fgets( theBuffer, 10, diskFile);
-	//readFSID();
 	int blockSize = readBlockSize(diskFile);
 	int blockCount = readBlockCount(diskFile);
 	int fatStart = readFATStart(diskFile);
