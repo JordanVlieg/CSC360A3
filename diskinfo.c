@@ -9,6 +9,11 @@ int main ( int argc, char *argv[] )
 	FILE *diskFile;
 	char *filename = argv[1];
 	diskFile = fopen(filename,"r");
+	if(diskFile == NULL)
+	{
+		printf("File not found error\n");
+		return 0;
+	}
 	//char theBuffer[10];4294952960
 	//fgets( theBuffer, 10, diskFile);
 	//readFSID();
@@ -29,7 +34,15 @@ int main ( int argc, char *argv[] )
 
 	fflush(stdout);
 
-	findFATBlocks(diskFile, fatStart, numFatBlocks, blockSize);
+	int* fatInfo;
+	fatInfo = findFATBlocks(diskFile, fatStart, numFatBlocks, blockSize);
+
+	int available = fatInfo[0];
+	int reserved = fatInfo[1];
+	int allocated = fatInfo[2];
+
+	printf("\nFAT Information: \nFree Blocks: %d\nReserved Blocks: %d\nAllocated Blocks: %d\n", available, reserved, allocated);
+
 	fclose(diskFile);
 	return 0;
 }
