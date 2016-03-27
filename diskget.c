@@ -14,14 +14,11 @@ int main ( int argc, char *argv[] )
 	diskFile = fopen(diskFileName,"r");
 	if(diskFile == NULL)
 	{
-		printf("File not found error\n");
+		printf("File not found.\n");
 		return 0;
 	}
 
 	int blockSize = readBlockSize(diskFile);
-	//int blockCount = readBlockCount(diskFile);
-	//int fatStart = readFATStart(diskFile);
-	//int numFatBlocks = readFATBlocks(diskFile);
 	int rootDirStart = readDirStart(diskFile);
 	int numRootDirBlocks = readDirBlocks(diskFile);
 

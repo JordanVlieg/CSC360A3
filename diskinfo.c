@@ -11,7 +11,7 @@ int main ( int argc, char *argv[] )
 	diskFile = fopen(filename,"r");
 	if(diskFile == NULL)
 	{
-		printf("File not found error\n");
+		printf("File not found.\n");
 		return 0;
 	}
 	int blockSize = readBlockSize(diskFile);

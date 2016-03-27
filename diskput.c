@@ -18,13 +18,13 @@ int main ( int argc, char *argv[] )
 
 	if(diskFile == NULL)
 	{
-		printf("File not found error\n");
+		printf("File not found.\n");
 		return 0;
 	}
 
 	if(hostFile == NULL)
 	{
-		printf("File not found error\n");
+		printf("File not found.\n");
 		return 0;
 	}
 	fclose(hostFile);
